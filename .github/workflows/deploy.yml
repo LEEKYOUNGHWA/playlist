@@ -12,7 +12,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          repository: LEEKYOUNGHWA/playlist # <-- 여기를 수정하세요!
+          repository: leekyounghwa/playlist # <-- 여기를 수정하세요!
           fetch-depth: 0
 
       - name: Set up Docker Buildx
@@ -30,7 +30,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/LEEKYOUNGHWA/playlist:latest # <-- 여기를 수정하세요!
+          tags: ghcr.io/leekyounghwa/playlist:latest # <-- 여기를 수정하세요!
           file: ./Dockerfile
           secrets: |
             "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}"
@@ -43,7 +43,7 @@ jobs:
           username: "ubuntu"
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
-            export IMAGE_NAME=ghcr.io/LEEKYOUNGHWA/playlist:latest # <-- 여기를 수정하세요!
+            export IMAGE_NAME=ghcr.io/leekyounghwa/playlist:latest # <-- 여기를 수정하세요!
             sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             sudo docker-compose pull
             sudo docker-compose up -d --force-recreate
