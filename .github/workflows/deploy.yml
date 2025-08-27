@@ -48,6 +48,8 @@ jobs:
           username: "ubuntu"
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
+            cd /home/ubuntu/playlist
+            
             export IMAGE_NAME=ghcr.io/leekyounghwa/playlist:latest
             sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             sudo docker-compose pull
