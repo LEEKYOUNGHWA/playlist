@@ -1,0 +1,24 @@
+# --- backend/src/main/resources/application.yml (공통 설정) ---
+# 모든 환경(local, dev, prod)에 공통으로 적용되는 설정입니다.
+
+server:
+  port: 8080 # 애플리케이션이 실행될 포트 번호
+
+spring:
+  jpa:
+    show-sql: true # JPA가 생성하는 SQL 쿼리를 콘솔에 출력
+    properties:
+      hibernate:
+        format_sql: true # SQL 쿼리를 보기 좋게 포맷
+
+# YouTube API 키와 플레이리스트 ID는 환경 변수에서 로드됩니다.
+# 이 변수들은 각 배포 환경(로컬, 개발, 운영)에 맞게 설정해야 합니다.
+# 예: docker run 시 -e YOUTUBE_API_KEY=값 으로 주입
+youtube:
+  api-key: ${YOUTUBE_API_KEY} # 'YOUTUBE_API_KEY' 환경 변수에서 값 가져오기
+  playlist-id: ${YOUTUBE_PLAYLIST_ID} # 'YOUTUBE_PLAYLIST_ID' 환경 변수에서 값 가져오기
+
+logging:
+  level:
+    root: INFO # 기본 로그 레벨 (INFO 이상만 출력)
+    com.example.playlistsearch: DEBUG # 'com.example.playlistsearch' 패키지는 DEBUG 레벨까지 출력

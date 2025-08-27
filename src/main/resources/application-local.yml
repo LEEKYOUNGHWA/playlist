@@ -1,0 +1,30 @@
+# --- backend/src/main/resources/application-local.yml (로컬 개발 환경 전용 설정) ---
+# 'local' 프로필이 활성화될 때만 적용되는 설정입니다.
+
+spring:
+  config:
+    activate:
+      on-profile: local # 이 설정 파일이 'local' 프로필과 연결됨
+  datasource:
+    url: jdbc:h2:mem:playlistdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE # 인메모리 H2 데이터베이스 URL
+    driverClassName: org.h2.Driver # H2 데이터베이스 드라이버
+    username: sa # H2 DB 사용자명
+    password: # H2 DB 비밀번호 (없음)
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect # H2 데이터베이스 방언 설정
+    hibernate:
+      ddl-auto: update # 애플리케이션 시작 시 엔티티에 따라 테이블을 생성/업데이트 (개발 편의성)
+  h2:
+    console:
+      enabled: true # H2 웹 콘솔 활성화
+      path: /h2-console # H2 콘솔 접속 경로 (예: http://localhost:8080/h2-console)
+
+# 로컬 환경에서는 '.env.local' 파일에서 로드될 환경 변수 이름을 사용합니다.
+# 이 변수들은 프로젝트 루트의 .env.local 파일에 정의됩니다.
+youtube:
+  api-key: ${YOUTUBE_API_KEY_LOCAL} # 'YOUTUBE_API_KEY_LOCAL' 환경 변수에서 값 가져오기
+  playlist-id: ${YOUTUBE_PLAYLIST_ID_LOCAL} # 'YOUTUBE_PLAYLIST_ID_LOCAL' 환경 변수에서 값 가져오기
+
+logging:
+  level:
+    root: DEBUG # 로컬 환경에서는 더 상세한 로그 출력

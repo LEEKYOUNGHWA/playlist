@@ -1,0 +1,64 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4' // Spring Boot 버전
+    id 'io.spring.dependency-management' version '1.1.7' // 의존성 관리 플러그인
+}
+
+group = 'com.baekjihwa' // 프로젝트 그룹 ID
+version = '0.0.1-SNAPSHOT'
+description = 'Playlist Search Service' // 프로젝트 설명
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17) // Java 17 사용
+    }
+}
+
+repositories {
+    mavenCentral() // Maven Central 저장소 사용
+}
+
+dependencies {
+    // Spring Boot의 웹(REST API) 기능 사용
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Data JPA를 사용하여 데이터베이스 연동
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // 개발 중 편의를 위한 자동 재시작 등 기능
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    // 로컬 개발 및 테스트용 인메모리 H2 데이터베이스
+    runtimeOnly 'com.h2database:h2'
+    // PostgreSQL 데이터베이스 드라이버 (MySQL을 사용한다면 'com.mysql:mysql-connector-j'로 변경)
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // .env.local 파일에서 환경 변수를 자동으로 로드하기 위한 라이브러리
+    implementation 'io.github.cdimascio:java-dotenv:5.2.2'
+
+    // Swagger UI를 통해 API 문서를 자동 생성하고 웹으로 확인하기 위한 라이브러리
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
+    // Google API Client Library for Java: YouTube Data API와 통신하기 위해 필요
+    implementation 'com.google.api-client:google-api-client:2.4.0'
+    // Google YouTube Data API v3 서비스 특정 라이브러리
+    implementation 'com.google.apis:google-api-services-youtube:v3-rev20230807-2.0.0'
+    // Google OAuth 클라이언트 (인증 방식에 따라 필요)
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
+    // FindBugs의 어노테이션을 위한 라이브러리 (Google 라이브러리의 의존성)
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    // Jackson 대신 GsonFactory 사용을 위한 의존성
+    implementation 'com.google.http-client:google-http-client-gson:1.44.1'
+
+    // *** Lombok 의존성 추가 ***
+    compileOnly 'org.projectlombok:lombok:1.18.32' // 롬복 라이브러리 (컴파일 시에만 필요)
+    annotationProcessor 'org.projectlombok:lombok:1.18.32' // 롬복 어노테이션 프로세서
+
+    // 테스트 코드 작성을 위한 Spring Boot 테스트 의존성
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // JUnit 5 플랫폼 런처 (테스트 실행 환경)
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// JUnit 5를 사용하여 테스트 실행
+tasks.named('test') {
+    useJUnitPlatform()
+}
