@@ -1,7 +1,8 @@
 version: '3.8'
 services:
   backend:
-    build: .
+    # ✅ build: . 대신 이미지를 ghcr.io에서 가져오도록 변경
+    image: ghcr.io/leekyounghwa/playlist:latest
     container_name: playlist-app
     ports:
       - "8080:8080"
@@ -10,8 +11,8 @@ services:
     restart: always
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/my-playlist-db
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER} # <-- 환경 변수 사용
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD} # <-- 환경 변수 사용
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - YOUTUBE_PLAYLIST_ID=${YOUTUBE_PLAYLIST_ID}
   postgres-db:
@@ -22,5 +23,5 @@ services:
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=${POSTGRES_USER} # <-- 환경 변수 사용
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD} # <-- 환경 변수 사용
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

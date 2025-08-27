@@ -23,14 +23,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GitHub Container Registry (GA Runner)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (to ghcr.io)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -48,19 +48,33 @@ jobs:
           username: "ubuntu"
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
-            # 필요한 환경 변수들을 서버 환경에 설정
-            # Docker Compose가 이 변수들을 인식하게 됨
-            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            export YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}
-            export YOUTUBE_PLAYLIST_ID=${{ secrets.YOUTUBE_PLAYLIST_ID }}
+            # ✅ 1. 배포 디렉토리로 이동합니다. (docker-compose.yml이 있는 곳)
+            APP_DIR="/home/ubuntu/playlist" 
+            mkdir -p $APP_DIR # 폴더가 없을 경우 대비
+            cd $APP_DIR
             
-            cd /home/ubuntu/playlist
+            # ✅ 2. GitHub 저장소에서 docker-compose.yml과 .env 파일을 가져옵니다.
+            #    `docker-compose.yml`은 `image:`를 사용하므로 소스코드를 모두 클론할 필요가 없습니다.
+            #    단, `docker-compose.yml` 파일 자체와 `postgres-data` 같은 볼륨 디렉토리는 필요할 수 있습니다.
+            #    여기서는 `docker-compose.yml`과 `.env` 파일만 pull하는 것으로 가정합니다.
             
-            # Docker 이미지 pull
-            export IMAGE_NAME=ghcr.io/leekyounghwa/playlist:latest
+            # .env 파일을 GitHub Secrets에서 가져와 생성합니다.
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}" >> .env
+            echo "YOUTUBE_PLAYLIST_ID=${{ secrets.YOUTUBE_PLAYLIST_ID }}" >> .env
+            
+            # docker-compose.yml 파일이 GitHub 리포지토리의 루트에 있다고 가정합니다.
+            # 만약 .yml 파일만 특정 위치에 두고 싶다면, 수동으로 `scp` 등으로 전송해야 합니다.
+            # 하지만 워크플로우 파일과 함께 GitHub에 있다면, `actions/checkout`으로 이미 러너에 존재합니다.
+            # 러너에서 서버로 `docker-compose.yml`을 `scp`로 전송하는 것이 가장 확실합니다.
+            
+            # ✅ 3. VM에서 ghcr.io에 로그인하여 Docker 이미지를 pull할 수 있도록 합니다.
+            #    (이전 `Build and push Docker image` 단계에서 ghcr.io에 푸시했으므로)
             sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            sudo docker-compose pull
             
-            # Docker 컨테이너 재시작
-            sudo docker-compose up -d --force-recreate
+            # ✅ 4. Docker Compose를 사용하여 최신 이미지를 풀(pull)하고 컨테이너를 재시작합니다.
+            #    `--build` 옵션은 필요 없습니다. 이미 ghcr.io에 최신 이미지가 있으니까요.
+            sudo docker-compose down || true # 기존 컨테이너 중지 (에러 무시)
+            sudo docker-compose pull # 최신 이미지 pull
+            sudo docker-compose up -d # 컨테이너 실행
