@@ -48,9 +48,19 @@ jobs:
           username: "ubuntu"
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
+            # 필요한 환경 변수들을 서버 환경에 설정
+            # Docker Compose가 이 변수들을 인식하게 됨
+            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}
+            export YOUTUBE_PLAYLIST_ID=${{ secrets.YOUTUBE_PLAYLIST_ID }}
+            
             cd /home/ubuntu/playlist
             
+            # Docker 이미지 pull
             export IMAGE_NAME=ghcr.io/leekyounghwa/playlist:latest
             sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             sudo docker-compose pull
+            
+            # Docker 컨테이너 재시작
             sudo docker-compose up -d --force-recreate
