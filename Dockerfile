@@ -12,6 +12,9 @@ COPY build.gradle settings.gradle ./
 # 모든 소스 코드를 복사합니다.
 COPY src src
 
+# gradlew 파일에 실행 권한을 추가합니다.
+RUN chmod +x gradlew
+
 # 프로젝트를 빌드하여 .jar 파일을 생성합니다.
 RUN ./gradlew clean build -x test
 
