@@ -1,29 +1,36 @@
-# --- playlist/Dockerfile ---
+# 빌드 스테이지: Spring Boot 애플리케이션을 빌드합니다.
+FROM openjdk:17-jdk-slim as builder
 
-# 1. 빌드 환경 설정: Java 17을 기반으로 하는 경량화된 OpenJDK JDK 이미지를 사용합니다.
-#    'jre-slim' 대신 'jdk-slim'을 사용하여 빌드 환경의 안정성을 높입니다.
-FROM openjdk:17-jdk-slim
-
-# 2. 메인테이너 정보 (선택 사항): 이미지의 작성자 정보를 명시합니다.
-LABEL maintainer="Baek Jihwa <your.email@example.com>"
-
-# 3. 작업 디렉토리 설정: 컨테이너 내부의 작업 디렉토리를 /app으로 설정합니다.
-#    모든 애플리케이션 관련 파일들이 이 디렉토리에 복사됩니다.
+# 컨테이너 내부 작업 디렉토리를 설정합니다.
 WORKDIR /app
 
-# 4. JAR 파일 복사: Gradle 빌드 결과물인 JAR 파일을 컨테이너의 /app 디렉토리로 복사합니다.
-#    'ARG JAR_FILE=build/libs/*.jar'는 Docker가 'playlist/' (빌드 컨텍스트이자 프로젝트 루트) 폴더 안의
-#    'build/libs/' 경로에서 JAR 파일을 찾도록 지시합니다.
-#    'app.jar'는 컨테이너 내부에서 실행될 JAR 파일의 이름입니다.
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
+# Gradle Wrapper와 빌드 관련 파일을 복사합니다.
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
 
-# 5. 포트 노출: Spring Boot 애플리케이션이 사용할 포트를 외부에 노출합니다.
-#    기본적으로 Spring Boot는 8080 포트를 사용합니다.
+# 모든 소스 코드를 복사합니다.
+COPY src src
+
+# 프로젝트를 빌드하여 .jar 파일을 생성합니다.
+RUN ./gradlew clean build -x test
+
+# 실행 스테이지: 빌드된 .jar 파일을 실행하기 위한 최종 이미지를 만듭니다.
+FROM openjdk:17-jdk-slim
+
+# 컨테이너 내부에 작업 디렉토리를 설정합니다.
+WORKDIR /app
+
+# 빌드 스테이지에서 생성된 .jar 파일을 최종 이미지로 복사합니다.
+# 이 단계에서 .jar 파일이 존재하기 때문에 에러가 발생하지 않습니다.
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+# 애플리케이션이 사용할 포트를 외부에 노출합니다.
 EXPOSE 8080
 
-# 6. 컨테이너 실행 명령어 정의: 컨테이너가 시작될 때 실행될 명령어를 정의합니다.
-#    -Dspring.profiles.active=local : Spring Boot 애플리케이션을 'local' 프로필로 실행하도록 명시합니다.
-#    이 프로필은 H2 데이터베이스 사용 및 .env.local 참조 설정을 활성화합니다.
-#    API 키 및 플레이리스트 ID는 'docker run' 명령어로 -e 옵션을 통해 주입하는 것이 좋습니다.
-CMD ["java", "-jar", "-Dspring.profiles.active=local", "app.jar"]
+# 환경 변수 설정 (필요에 따라 추가/수정)
+ENV YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+ENV YOUTUBE_PLAYLIST_ID=${YOUTUBE_PLAYLIST_ID}
+
+# 애플리케이션을 실행합니다.
+ENTRYPOINT ["java", "-jar", "app.jar"]
