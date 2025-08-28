@@ -1,0 +1,27 @@
+# --- backend/src/main/resources/application-prod.yml (운영 환경 전용 설정) ---
+# 'prod' 프로필이 활성화될 때 적용되는 설정입니다.
+
+spring:
+  config:
+    activate:
+      on-profile: prod # 이 설정 파일이 'prod' 프로필과 연결됨
+  datasource:
+    # Docker Compose 네트워크 내에서 postgres-db 서비스 이름으로 접속합니다.
+    url: jdbc:postgresql://postgres-db:5432/my-playlist-db
+    driverClassName: org.postgresql.Driver
+    username: ${POSTGRES_USER} # 환경 변수에서 가져옵니다.
+    password: ${POSTGRES_PASSWORD} # 환경 변수에서 가져옵니다.
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect # PostgreSQL 데이터베이스 방언 명시
+    hibernate:
+      ddl-auto: update # ✅ 초기 배포 시 테이블 자동 생성. 이후에는 'validate' 또는 'none'으로 변경 고려.
+
+# 운영 환경에서 YouTube API 키 및 플레이리스트 ID는 환경 변수에서 로드됩니다.
+youtube:
+  api-key: ${YOUTUBE_API_KEY}
+  playlist-id: ${YOUTUBE_PLAYLIST_ID}
+
+logging:
+  level:
+    root: INFO # 운영 환경에서는 INFO 레벨로 설정
+    com.baekjihwa.playlist: INFO
