@@ -40,6 +40,8 @@ jobs:
           secrets: |
             "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}"
             "YOUTUBE_PLAYLIST_ID=${{ secrets.YOUTUBE_PLAYLIST_ID }}"
+            "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" 
+            "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" 
 
       - name: Deploy to Oracle VM
         uses: appleboy/ssh-action@master
@@ -48,33 +50,29 @@ jobs:
           username: "ubuntu"
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
-            # ✅ 1. 배포 디렉토리로 이동합니다. (docker-compose.yml이 있는 곳)
+            # ✅ 1. 배포 디렉토리로 이동합니다.
             APP_DIR="/home/ubuntu/playlist" 
-            mkdir -p $APP_DIR # 폴더가 없을 경우 대비
+            mkdir -p $APP_DIR
             cd $APP_DIR
             
-            # ✅ 2. GitHub 저장소에서 docker-compose.yml과 .env 파일을 가져옵니다.
-            #    `docker-compose.yml`은 `image:`를 사용하므로 소스코드를 모두 클론할 필요가 없습니다.
-            #    단, `docker-compose.yml` 파일 자체와 `postgres-data` 같은 볼륨 디렉토리는 필요할 수 있습니다.
-            #    여기서는 `docker-compose.yml`과 `.env` 파일만 pull하는 것으로 가정합니다.
-            
-            # .env 파일을 GitHub Secrets에서 가져와 생성합니다.
+            # ✅ 2. .env 파일을 GitHub Secrets에서 가져와 생성합니다.
+            #    데이터베이스 관련 환경 변수도 명시적으로 추가하여 Docker Compose가 인식하게 합니다.
             echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
             echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}" >> .env
             echo "YOUTUBE_PLAYLIST_ID=${{ secrets.YOUTUBE_PLAYLIST_ID }}" >> .env
             
-            # docker-compose.yml 파일이 GitHub 리포지토리의 루트에 있다고 가정합니다.
-            # 만약 .yml 파일만 특정 위치에 두고 싶다면, 수동으로 `scp` 등으로 전송해야 합니다.
-            # 하지만 워크플로우 파일과 함께 GitHub에 있다면, `actions/checkout`으로 이미 러너에 존재합니다.
-            # 러너에서 서버로 `docker-compose.yml`을 `scp`로 전송하는 것이 가장 확실합니다.
-            
-            # ✅ 3. VM에서 ghcr.io에 로그인하여 Docker 이미지를 pull할 수 있도록 합니다.
-            #    (이전 `Build and push Docker image` 단계에서 ghcr.io에 푸시했으므로)
+            # ✅ 3. GitHub Actions Runner에서 VM으로 docker-compose.yml 파일 전송
+            #    이 단계는 이미 워크플로우에 있습니다.
+            scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./docker-compose.yml ubuntu@${{ secrets.ORACLE_VM_IP }}:$APP_DIR/
+
+            # ✅ 4. VM에서 ghcr.io에 로그인하여 Docker 이미지를 pull할 수 있도록 합니다.
             sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             
-            # ✅ 4. Docker Compose를 사용하여 최신 이미지를 풀(pull)하고 컨테이너를 재시작합니다.
-            #    `--build` 옵션은 필요 없습니다. 이미 ghcr.io에 최신 이미지가 있으니까요.
-            sudo docker-compose down || true # 기존 컨테이너 중지 (에러 무시)
-            sudo docker-compose pull # 최신 이미지 pull
-            sudo docker-compose up -d # 컨테이너 실행
+            # ✅ 5. Docker Compose를 사용하여 최신 이미지를 풀(pull)하고 컨테이너를 재시작합니다.
+            sudo docker-compose down || true 
+            sudo docker-compose pull 
+            echo "Waiting for postgres-db to be ready..."
+            sleep 10 # PostgreSQL 컨테이너가 시작될 시간을 충분히 줍니다.
+            
+            sudo docker-compose up -d 
