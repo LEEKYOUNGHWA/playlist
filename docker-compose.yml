@@ -9,13 +9,15 @@ services:
       - postgres-db
     restart: always
     environment:
-      # ✅ 'prod' 프로파일을 활성화하여 application-prod.yml 설정을 사용합니다.
-      - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/my-playlist-db
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - YOUTUBE_PLAYLIST_ID=${YOUTUBE_PLAYLIST_ID}
+    # ✅ 여기에 DNS 서버를 명시적으로 추가합니다.
+    dns:
+      - 8.8.8.8 # Google Public DNS
+      - 8.8.4.4 # Google Public DNS 보조
   postgres-db:
     container_name: postgres-db
     image: postgres:14-alpine
@@ -24,6 +26,5 @@ services:
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=my-playlist-db
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
