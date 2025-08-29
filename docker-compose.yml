@@ -9,6 +9,8 @@ services:
       - postgres-db
     restart: always
     environment:
+      # ✅ 'prod' 프로파일을 활성화하여 application-prod.yml 설정을 사용합니다.
+      - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/my-playlist-db
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
