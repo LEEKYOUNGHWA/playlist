@@ -16,10 +16,6 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - YOUTUBE_PLAYLIST_ID=${YOUTUBE_PLAYLIST_ID}
-    # ✅ 여기에 DNS 서버를 명시적으로 추가합니다.
-    dns:
-      - 8.8.8.8 # Google Public DNS
-      - 8.8.4.4 # Google Public DNS 보조
   postgres-db:
     container_name: postgres-db
     image: postgres:14-alpine
