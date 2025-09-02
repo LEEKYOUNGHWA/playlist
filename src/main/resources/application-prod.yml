@@ -1,6 +1,14 @@
 # --- backend/src/main/resources/application-prod.yml (운영 환경 전용 설정) ---
 # 'prod' 프로필이 활성화될 때 적용되는 설정입니다.
 
+# ✅ 추가된 내용: Nginx 프록시를 통해 HTTPS 요청을 인식하도록 설정합니다.
+server:
+  forward-headers-strategy: native
+  tomcat:
+    remote-ip-header: X-Forwarded-For
+    protocol-header: X-Forwarded-Proto
+    protocol-header-https-value: https
+
 spring:
   config:
     activate:
